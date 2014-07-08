@@ -3,6 +3,8 @@ package records
 import scala.language.experimental.macros
 
 object R {
+  var allowStructuralCalls: Boolean = false
+
   def apply(v: (String, Any)*): R = macro records.Macros.apply_impl
 
   implicit class ConvertR[From <: R](val record: From) extends AnyVal {

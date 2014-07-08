@@ -106,6 +106,8 @@ class VariousTests extends FlatSpec with Matchers {
 
   // Records have a curse that they can never be seen so
   // explicit mentions of records must be defined as case classes.
+/*
+
   case class AgeName(age: Int, name: String)
 
   it should "allow different valued rows in ascribed lists" in {
@@ -115,12 +117,11 @@ class VariousTests extends FlatSpec with Matchers {
   }
 
   it should "allow to ascribe a result type" in {
-
     def query: AgeName =
       defRecord().to[AgeName]
 
     query.age should be (2)
-  }
+  }*/
 
   it should "allow tuples to construct literal rows" in {
 

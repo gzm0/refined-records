@@ -26,18 +26,37 @@ object Macros {
       *    return a value of a corresponding type.
       */
     def record(schema: Seq[(String, Type)])(ancestors: Ident*)(fields: Tree*)(dataImpl: Tree) = {
-      def fieldTree(i: Int, name: String, tpe: Type): Tree =
-        q"def ${newTermName(name)}: $tpe = macro records.Macros.selectField_impl[$tpe]"
+      def macroFieldTree(i: Int, name: String, tpe: Type): Tree =
+        q"override def ${newTermName(name)}: $tpe = macro records.Macros.selectField_impl[$tpe]"
 
+      def rtFieldTree(i: Int, name: String, tpe: Type): Tree =
+        q"""
+          def ${newTermName(name)}: $tpe = {
+            if (records.R.allowStructuralCalls)
+              __data[$tpe]($name)
+            else
+              sys.error("Disallowed structural call")
+          }
+        """
+ 
       val macroFields =
-        schema.zipWithIndex.map { case ((n, s), i) => fieldTree(i, n, s) }
+        schema.zipWithIndex.map { case ((n, s), i) => macroFieldTree(i, n, s) }
+      val rtFields =
+        schema.zipWithIndex.map { case ((n, s), i) => rtFieldTree(i, n, s) }
+
+      val rtBaseClass = q"""
+        class RTBase extends records.R with ..$ancestors {
+          ..$fields
+          def __data[T](fieldName: String): T = $dataImpl
+          ..$rtFields
+        }
+      """
 
       val resultTree = if (CompatInfo.isScala210) {
         q"""
         import scala.language.experimental.macros
-        class Workaround extends records.R with ..$ancestors {
-          ..$fields
-          def __data[T](fieldName: String): T = $dataImpl
+        $rtBaseClass
+        class Workaround extends RTBase {
           ..$macroFields
         }
         new Workaround()
@@ -45,9 +64,8 @@ object Macros {
       } else {
         q"""
         import scala.language.experimental.macros
-        new records.R with ..$ancestors {
-          ..$fields
-          def __data[T](fieldName: String): T = $dataImpl
+        $rtBaseClass
+        new RTBase {
           ..$macroFields
         }
         """

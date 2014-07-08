@@ -7,7 +7,7 @@ import records.R
 class Record211Tests extends FlatSpec with Matchers {
 
   case class DBRecord(name: String, age: Int, location: String)
-
+/*
   "A Record" should "not depend on declared field order" in {
 
     val people = List(
@@ -33,5 +33,5 @@ class Record211Tests extends FlatSpec with Matchers {
       DBRecord("Peter",   1,  "bed"),
       DBRecord("Chuck",   2,  "bar")))
   }
-
+ */
 }
