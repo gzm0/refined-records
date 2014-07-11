@@ -18,10 +18,11 @@ object BuildSettings {
     resolvers += Resolver.sonatypeRepo("snapshots"),
     libraryDependencies += {
       if (scalaVersion.value == "2.12.0-SNAPSHOT")
-        "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test"
+        "com.lihaoyi" % "utest_2.11" % "0.1.8"
       else
-        "org.scalatest" %% "scalatest" % "2.2.0" % "test"
-    }
+        "com.lihaoyi" %% "utest" % "0.1.8"
+    },
+    testFrameworks += new TestFramework("utest.runner.JvmFramework")
   )
 
   val macroBuildSettings = buildSettings ++ Seq(

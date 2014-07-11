@@ -1,54 +1,53 @@
 package records.test
 
-import org.scalatest._
+import utest._
 
 // This is for 2.10.x compatibility!
 import scala.language.reflectiveCalls
 
-class VariousTests extends FlatSpec with Matchers {
+object VariousTests extends TestSuite {
 
   def defRecord(age: Int = 2) = records.R(
     "age" -> age,
     "name" -> "David")
 
-
-  "A Record" should "allow to read the value directly" in {
+  "allow to read the value directly"-{
     val record = defRecord()
 
-    record.age should be (2)
+    assert(record.age == 2)
   }
 
-  it should "be created with a special constructor" in {
+  "be created with a special constructor"-{
     val row = records.R("foo" -> 1, ("bar", 2.3), Tuple2("baz", 1.7))
 
-    row.foo should be (1)
-    row.bar should be (2.3)
-    row.baz should be (1.7)
+    assert(row.foo == 1)
+    assert(row.bar == 2.3)
+    assert(row.baz == 1.7)
   }
 
-  it should "allow renaming in imports" in {
+  "allow renaming in imports"-{
     import records.{ R => X }
     val row = X("foo" -> 1)
 
-    row.foo should be (1)
+    assert(row.foo == 1)
   }
 
-  it should "allow aliases" in {
+  "allow aliases"-{
     val X = records.R
     val row = X("foo" -> 1)
 
-    row.foo should be (1)
+    assert(row.foo == 1)
   }
 
-  it should "be hygienic" in {
+  "be hygienic"-{
     object records {
       val R = Predef
     }
-    defRecord(3).age should be (3)
+    assert(defRecord(3).age == 3)
   }
 
   import records.R
-  it should "allow strange field names" in {
+  "allow strange field names"-{
     val record = R(
       "type" -> "R",
       "blank space" -> "blank space",
@@ -57,19 +56,19 @@ class VariousTests extends FlatSpec with Matchers {
       "豆贝尔维" -> "dòu bèi ěr wéi"
     )
 
-    record.`type` should be ("R")
-    record.`blank space` should be ("blank space")
-    record.`1` should be (1)
-    record.`1>2` should be ("1>2")
-    record.`豆贝尔维` should be ("dòu bèi ěr wéi")
+    assert(record.`type` == "R")
+    assert(record.`blank space` == "blank space")
+    assert(record.`1` == 1)
+    assert(record.`1>2` == "1>2")
+    assert(record.`豆贝尔维` == "dòu bèi ěr wéi")
   }
 
-  it should "allow to read the value in a closure" in {
+  "allow to read the value in a closure"-{
     val record = defRecord()
 
     val f = () => record.name
 
-    f() should be ("David")
+    assert(f() == "David")
   }
 
   it should "allow Rows as a result in a method type" in {
@@ -140,5 +139,5 @@ class VariousTests extends FlatSpec with Matchers {
     row.bar should be (2.3)
     row.baz should be (1.7)
   }
-
+*/
 }
