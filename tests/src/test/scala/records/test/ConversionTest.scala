@@ -6,7 +6,7 @@ import records.Rec
 
 // This is for 2.10.x compatibility!
 import scala.language.reflectiveCalls
-
+case class PrivateCtor private (x: Int)
 class ConversionTests extends FlatSpec with Matchers {
 
   case class SimpleVal(a: Int)
@@ -88,5 +88,10 @@ class ConversionTests extends FlatSpec with Matchers {
     case class GenericDBRecord[T](name: String, age: T)
     val record = Rec("name" -> "David", "age" -> 1)
     record.to[GenericDBRecord[Int]]
+  }
+
+  it should "be able to convert to case classes with private ctor" in {
+    val rec = Rec("x" -> 1)
+    rec.to[PrivateCtor].x should be(1)
   }
 }

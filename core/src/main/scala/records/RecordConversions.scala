@@ -106,11 +106,20 @@ object RecordConversions {
         }
       }
 
+      val targetModule = toType.typeSymbol.companion
+      val ctorTree = {
+        if (targetModule != NoSymbol)
+          q"$targetModule(..$args)"
+        else
+          // We can't get the companion of a local class. Fallback to ctor
+          q"new $toType(..$args)"
+      }
+
       q"""
         new _root_.records.RecordConversions.ConvertRecord[$fromType, $toType] {
           def convert(r: $fromType) = {
             val ${tmpTerm} = r
-            new $toType(..$args)
+            $ctorTree
           }
         }
       """
