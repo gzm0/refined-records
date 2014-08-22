@@ -49,8 +49,8 @@ object RecordConversions {
         .map { case c.ImplicitCandidate(_, _, tp, tree) => tp.normalize }
 
       val implicitCandidates = allImplicitCandidates.collect {
-        case TypeRef(_, _, _ :: toType :: Nil) => toType
-      }.filter(x => x.typeSymbol.isClass && x.typeSymbol.asClass.isCaseClass)
+        case TypeRef(_, _, _ :: toType :: Nil) if isCaseClass(toType) => toType
+      }
 
       implicitCandidates match {
         case candidate :: Nil =>
@@ -99,7 +99,7 @@ object RecordConversions {
           q"$materializer.convert(${accessData(q"$tmpTerm", toFldName, fromTpe)})"
         } else if (fromTpe <:< toFldTpe) {
           // convert other types
-          accessData(q"$tmpTerm", toFldName, toFldTpe)
+          accessData(q"$tmpTerm", toFldName, fromTpe)
         } else {
           c.abort(NoPosition, s"Type of field ${prefix(".") + toFldName}: $fromTpe" +
             s" of source record doesn't conform the expected type ($toFldTpe).")
@@ -107,22 +107,28 @@ object RecordConversions {
       }
 
       val targetModule = toType.typeSymbol.companion
-      val ctorTree = {
-        if (targetModule != NoSymbol)
-          q"$targetModule(..$args)"
-        else
-          // We can't get the companion of a local class. Fallback to ctor
-          q"new $toType(..$args)"
+      val module = {
+        if (targetModule != NoSymbol) {
+          val names = targetModule.fullName.split('.')
+          names.foldLeft[Tree](Ident(nme.ROOTPKG)) { (a, n) => Select(a, n) }
+        } else
+          // We can't get the companion of a local class. Fallback to
+          // unhygienic construction (ok, since local)
+          Ident(toType.typeSymbol.name.toTermName)
       }
 
-      q"""
+      val t = q"""
         new _root_.records.RecordConversions.ConvertRecord[$fromType, $toType] {
           def convert(r: $fromType) = {
             val ${tmpTerm} = r
-            $ctorTree
+            $module.apply(..$args)
           }
         }
       """
+
+      println(showRaw(t))
+
+      t
     }
 
     def caseClassFields(ccType: Type) = {
